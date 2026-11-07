@@ -6,9 +6,9 @@
 # alpine 默认没有 bash，因此 shebang 用 sh，再 exec 切换到 bash
 
 set -eE
-confhome=https://raw.githubusercontent.com/bin456789/reinstall/main
-confhome_cn=https://cnb.cool/bin456789/reinstall/-/git/raw/main
-# confhome_cn=https://www.ghproxy.cc/https://raw.githubusercontent.com/bin456789/reinstall/main
+confhome=https://raw.githubusercontent.com/Furinazzz/reinstall1/main
+# A mirror must contain this fork, otherwise Windows customizations are lost.
+confhome_cn=
 
 # 用于判断 reinstall.sh 和 trans.sh 是否兼容
 SCRIPT_VERSION=4BACD833-A585-23BA-6CBB-9AA4E08E0005
@@ -121,7 +121,7 @@ Usage: $reinstall_____ anolis      7|8|23
                        For Linux Only:
                        [--no-cloud-kernel]         (only for Debian/Ubuntu/Alpine)
 
-       Manual:         https://github.com/bin456789/reinstall
+       Manual:         https://github.com/Furinazzz/reinstall1
 
 EOF
     exit 1

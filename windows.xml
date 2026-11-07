@@ -174,8 +174,18 @@
                 <SkipMachineOOBE>true</SkipMachineOOBE>
                 <SkipUserOOBE>true</SkipUserOOBE>
             </OOBE>
-            <!-- 不设置时区，则使用镜像的默认时区 -->
-            <!-- <TimeZone>China Standard Time</TimeZone> -->
+            <!-- trans.sh removes these fork settings for non-Windows-10 images. -->
+            <TimeZone>Tokyo Standard Time</TimeZone>
+            <!-- GeoID is per-user. Run once in the installed admin user's context.
+                 Also recheck DNS after SetupComplete (or if OEM setup skipped it).
+                 Keep all work in one command: FirstLogonCommands run concurrently. -->
+            <FirstLogonCommands>
+                <SynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <CommandLine>cmd /c call "%SystemDrive%\windows-cloudflare-japan.bat" --auto</CommandLine>
+                    <Description>Reinstall: Cloudflare DNS and Japan</Description>
+                </SynchronousCommand>
+            </FirstLogonCommands>
         </component>
     </settings>
 </unattend>

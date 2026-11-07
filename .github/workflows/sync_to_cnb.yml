@@ -5,6 +5,7 @@ on:
 jobs:
   run:
     name: 同步到 CNB
+    if: github.repository == 'bin456789/reinstall'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

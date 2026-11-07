@@ -3458,6 +3458,10 @@ get_image_state() {
     fi
 }
 
+is_windows10_iso() {
+    [ "$distro" = windows ] && [ "${product_ver:-}" = 10 ]
+}
+
 modify_windows() {
     local os_dir=$1
     info "Modify Windows"
@@ -3501,6 +3505,20 @@ modify_windows() {
         create_win_set_netconf_script $os_dir/windows-set-netconf-$ethx.bat
         bats="$bats windows-set-netconf-$ethx.bat"
     done
+
+    # Windows 10 ISO: override DNS only after upstream restores IP/gateway/DNS.
+    # Keep the standalone BAT for FirstLogonCommands and manual recovery.
+    if is_windows10_iso; then
+        download "$confhome/windows-cloudflare-japan.bat" "$os_dir/windows-cloudflare-japan.bat"
+        unix2dos "$os_dir/windows-cloudflare-japan.bat"
+        cat >"$os_dir/windows-cloudflare-japan-auto.bat" <<'EOF'
+@echo off
+call "%SystemDrive%\windows-cloudflare-japan.bat" --auto
+del "%~f0"
+EOF
+        unix2dos "$os_dir/windows-cloudflare-japan-auto.bat"
+        bats="$bats windows-cloudflare-japan-auto.bat"
+    fi
 
     # 5. 设置用户密码永不过期（仅限 iso 安装）
     #    Azure 的 Windows 实例，初始用户的密码也是永不过期的
@@ -8021,6 +8039,14 @@ EOF
     # 修改应答文件
     apk add xmlstarlet
     download $confhome/windows.xml /tmp/autounattend.xml
+    # These fork settings apply only to Windows 10 client ISO installs.
+    # Keep other Windows versions and DD images on their original behavior.
+    if ! is_windows10_iso; then
+        xmlstarlet ed -L -N x="urn:schemas-microsoft-com:unattend" \
+            -d "//x:TimeZone[.='Tokyo Standard Time']" \
+            -d "//x:FirstLogonCommands[x:SynchronousCommand/x:Description='Reinstall: Cloudflare DNS and Japan']" \
+            /tmp/autounattend.xml
+    fi
     locale=$(get_selected_image_prop 'Default Language')
     use_default_rdp_port=$(is_need_change_rdp_port && echo false || echo true)
 
