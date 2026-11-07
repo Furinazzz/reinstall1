@@ -1,7 +1,6 @@
 name: 同步到 CNB
 on:
   workflow_dispatch:
-  push:
 jobs:
   run:
     name: 同步到 CNB

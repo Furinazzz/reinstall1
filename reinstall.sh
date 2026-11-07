@@ -87,13 +87,13 @@ Usage: $reinstall_____ anolis      7|8|23
                        fnos        1
                        fygoos      1
                        nixos       26.05
-                       fedora      43|44
+                       fedora      44|45
                        debian      9|10|11|12|13
-                       opensuse    16.0|tumbleweed
-                       openeuler   20.03|22.03|24.03
                        alpine      3.21|3.22|3.23|3.24
+                       opensuse    16.0|16.1|tumbleweed
                        kali        last-snapshot|rolling
-                       ubuntu      18.04|20.04|22.04|24.04|26.04 [--minimal]
+                       openeuler   20.03|22.03|24.03|26.09
+                       ubuntu      18.04|20.04|22.04|24.04|26.04|26.10 [--minimal]
                        arch
                        gentoo
                        aosc
@@ -119,7 +119,7 @@ Usage: $reinstall_____ anolis      7|8|23
                        [--no-auto-drivers]         (only for iso installation)
 
                        For Linux Only:
-                       [--no-cloud-kernel]         (only for Debian/Ubuntu/Alpine)
+                       [--no-cloud-kernel]         (only for Debian/Ubuntu/Alpine/openSUSE)
 
        Manual:         https://github.com/Furinazzz/reinstall1
 
@@ -166,14 +166,26 @@ error_and_exit() {
     exit 1
 }
 
-show_dd_password_tips() {
-    warn false "
-This password is only used for SSH access to view logs during the installation.
-Password of the image will NOT modify.
+show_dd_tips() {
+    warn false '********** 提醒 Info **********'
+    warn false '用户名/密码/公钥仅用于安装时登录 SSH 查看日志/救砖，不会应用到新系统。'
+    warn false '镜像的用户名/密码/公钥不会被修改。'
+    warn false
+    warn false 'The Username/Password/Public Key is only for SSH login to view logs or rescue the system during installation, it will not be applied to the new system.'
+    warn false 'The Username/Password/Public Key inside the image will NOT be modified.'
+    warn false '**********************************'
+}
 
-密码仅用于安装过程中通过 SSH 查看日志。
-镜像的密码不会被修改。
-"
+show_fnos_tips() {
+    warn false '********** 提醒 Info **********'
+    warn false '用户名/密码/公钥仅用于安装时登录 SSH 查看日志/救砖，不会应用到新系统。'
+    warn false '安装完成后，你需要尽快到 http://IP:5666 配置账号密码。'
+    warn false '安装完成后，SSH 服务不会开启，你需要到 http://IP:5666 自行开启。'
+    warn false
+    warn false 'The Username/Password/Public Key is only for SSH login to view logs or rescue the system during installation, it will not be applied to the new system.'
+    warn false 'After installation, you need to config the username and password on http://IP:5666 as soon as possible.'
+    warn false 'After installation, SSH Service is disabled. You need to enable it from http://IP:5666.'
+    warn false '**********************************'
 }
 
 show_url_in_args() {
@@ -221,12 +233,12 @@ is_in_china() {
 
     if [ -z "$_loc" ]; then
         # www.cloudflare.com/dash.cloudflare.com 国内访问的是美国服务器，而且部分地区被墙
-        # 没有ipv6 www.visa.cn
-        # 没有ipv6 www.bose.cn
-        # 没有ipv6 www.garmin.com.cn
-        # 备用 www.prologis.cn
-        # 备用 www.autodesk.com.cn
-        # 备用 www.keysight.com.cn
+        # 以下这些都是用 cf cdn 且开通了国内 cdn 节点
+        # www.visa.com.cn
+        # www.garmin.com.cn
+        # www.prologis.cn
+        # www.autodesk.com.cn
+        # www.keysight.com.cn
         if ! _loc=$(curl -L http://www.qualcomm.cn/cdn-cgi/trace | grep '^loc=' | cut -d= -f2 | grep .); then
             error_and_exit "Can not get location."
         fi
@@ -727,6 +739,8 @@ is_cpu_supports_x86_64_v3() {
     # /proc/cpuinfo 不显示 lzcnt, 可用 abm 代替，但 cygwin 也不显示 abm
     # /proc/cpuinfo 不显示 osxsave, 故用 xsave 代替
 
+    # https://github.com/HenrikBengtsson/x86-64-level/blob/develop/x86-64-level
+
     # 在 32 位 cygwin 上也能正常识别
     need_flags="avx avx2 bmi1 bmi2 f16c fma movbe xsave"
     had_flags=$(grep -m 1 ^flags /proc/cpuinfo | awk -F': ' '{print $2}')
@@ -944,6 +958,26 @@ is_have_arm64_version() {
     return 1
 }
 
+is_have_32_bit_version() {
+    case "$version" in
+    2008)
+        return
+        ;;
+    vista | 7 | 8 | 8.1)
+        return
+        ;;
+    10)
+        # iot enterprise 曾经有 32 位版本
+        # en_windows_10_iot_enterprise_version_1909_x86_dvd_b62f9c12.iso
+        case "$edition" in
+        'iot enterprise ltsc 2021') return 1 ;;
+        *) return ;;
+        esac
+        ;;
+    esac
+    return 1
+}
+
 find_windows_iso() {
     parse_windows_image_name || error_and_exit "--image-name wrong: $image_name"
     if ! { [ "$version" = 8 ] || [ "$version" = 8.1 ]; } && [ -z "$edition" ]; then
@@ -963,8 +997,14 @@ find_windows_iso() {
     full_langs="$(lang_convert full_language) $(lang_convert fallback_full_language)"
     full_langs=$(xargs -n 1 <<<"$full_langs" | awk '!seen[$0]++' | xargs)
 
-    case "$basearch" in
-    x86) # 备用，查找功能目前不支持 32 位
+    # 默认 64 位，除非指定了 32 位
+    iso_arch_to_find=$basearch
+    if [ "$bit" = 32 ]; then
+        iso_arch_to_find=x86
+    fi
+
+    case "$iso_arch_to_find" in
+    x86)
         arch_win=x86
         arch_win_vlsc='32-?bit'
         ;;
@@ -1193,6 +1233,7 @@ get_windows_iso_link() {
     echo "Label vlsc: $label_vlsc"
     echo "Page:       $page_url"
     echo "Languages:  $langs $full_langs"
+    echo "Arch:       $arch_win"
     echo
 
     # 先判断是否能自动查找该版本
@@ -1204,8 +1245,12 @@ get_windows_iso_link() {
         error_and_exit "Not support find this iso. Check if --image-name is wrong. Or set --iso manually."
     fi
 
-    if [ "$basearch" = aarch64 ] && ! is_have_arm64_version; then
+    if [ "$arch_win" = arm64 ] && ! is_have_arm64_version; then
         error_and_exit "No ARM64 iso for this Windows Version or Edition."
+    fi
+
+    if [ "$arch_win" = x86 ] && ! is_have_32_bit_version; then
+        error_and_exit "No 32-bit iso for this Windows Version or Edition."
     fi
 
     if [ -n "$label_msdl" ]; then
@@ -1253,29 +1298,72 @@ get_shortest_line_by_field() {
     awk "(NR == 1 || length(\$$field) < length(field)) { line = \$0; field = \$$field } END { print line }"
 }
 
+month_to_mm() {
+    local month="${1,,}"     # 转小写
+    local mon="${month:0:3}" # 取前三个字母
+    local i=0
+    for _mon in jan feb mar apr may jun jul aug sep oct nov dec; do
+        i=$((i + 1))
+        if [ "$mon" = "$_mon" ]; then
+            printf "%02d\n" "$i"
+            return
+        fi
+    done
+    return 1
+}
+
 get_best_windows_iso_line() {
     local lines
     lines=$(cat)
 
+    # 注意
+    # zh-cn_windows_server_2019_x64_dvd_19d65722.iso                    2022-11-15
+    # cn_windows_server_2019_updated_april_2021_x64_dvd_a6dae187.iso    2021-04-20
+    # zh-cn 这种命名比 cn 新，可以通过此判断
+    # 我们已经在前面是先查找 cc-cc 格式，没找到才查找 cc 格式，因此在这里它们不会同时存在，无需处理
+
     # 排除 debug 版
     lines=$(echo "$lines" | grep -Ei -v '_(symbols|debug|debugging|checked)_')
 
-    # 在所有符合的 iso 中
     # 先选择 win10/11 大版本更新的 (version 26h1) 或者有 sp 版本的 (sp1, windows_8.1_with_update_)
-    # 再选择有日期更新的 (updated_july_2026)
-    # 再选择 vl
-    # 再按版本号排序选择最新版
+    if grep_lines=$(grep -Ei "_(version_[0-9h]{4}|sp[1-9]|service_pack|with_update)_" <<<"$lines"); then
+        lines=$grep_lines
+    fi
 
-    # 但是也有例外
-    # zh-cn_windows_server_2019_x64_dvd_19d65722.iso                    2022-11-15
-    # cn_windows_server_2019_updated_april_2021_x64_dvd_a6dae187.iso    2021-04-20
+    # 从 _version_26h1_ 字符串中选出最新的版本号
+    local latest_version=
+    if latest_version=$(awk '{print $1}' <<<"$lines" | grep -Eio "_version_[0-9h]{4}_" |
+        cut -d_ -f3 | sort -r | head -1 | grep .); then
+        info "ISO Latest version"
+        echo "$latest_version" >&2
+        lines=$(grep -Fi "_version_${latest_version}_" <<<"$lines")
+    fi
 
-    for key in '(version_[0-9h]{4}|sp[1-9]|service_pack|with_update)' 'updated' 'vl'; do
-        if grep_lines=$(grep -Ei "_${key}_" <<<"$lines"); then
-            lines=$grep_lines
-        fi
-    done
+    # 从 _updated_sep_2026_ 字符串中选出最新的日期
+    local latest_yyyymm=
+    local latest_updated_keyword=
+    if updated_keywords=$(awk '{print $1}' <<<"$lines" | grep -Eio '_updated_[a-z]+_[0-9]{4}_'); then
+        for _updated_xxx_20xx_ in $updated_keywords; do
+            IFS=_ read -r _ _ month yyyy <<<"$_updated_xxx_20xx_"
+            # alpine 不支持这种写法
+            # yymm=$(date -d "$month 1 $year" "+%y%m")
+            yyyymm="${yyyy}$(month_to_mm "$month")"
+            if [ -z "$latest_yyyymm" ] || [ "$yyyymm" -gt "$latest_yyyymm" ]; then
+                latest_yyyymm=$yyyymm
+                latest_updated_keyword=$_updated_xxx_20xx_
+            fi
+        done
+        info "ISO Latest date"
+        echo "${latest_yyyymm:0:4}-${latest_yyyymm:4:2}" >&2
+        lines=$(grep -Fi "$latest_updated_keyword" <<<"$lines")
+    fi
 
+    # 优先使用 vl
+    if grep_lines=$(grep -Fi "_vl_" <<<"$lines"); then
+        lines=$grep_lines
+    fi
+
+    # 最后按版本号倒序，选出第一行
     echo "$lines" | sort -Vr | head -1
 }
 
@@ -1561,6 +1649,7 @@ Continue?
         22.04) codename=jammy ;;
         24.04) codename=noble ;;
         26.04) codename=resolute ;;
+        26.10) codename=stonking ;;
         esac
 
         if is_use_cloud_image; then
@@ -1633,7 +1722,9 @@ Continue?
             if is_in_china; then
                 mirror=https://mirror.nju.edu.cn/archlinux
             else
-                mirror=https://geo.mirror.pkgbuild.com # geoip
+                # https://archlinux.org/mirrorlist/all/   # 镜像源列表
+                # mirror=https://geo.mirror.pkgbuild.com  # geoip
+                mirror=https://fastly.mirror.pkgbuild.com # cdn
             fi
         else
             if is_in_china; then
@@ -1740,10 +1831,8 @@ Continue?
             else
                 # leap
                 dir=distribution/leap/$releasever/appliances
-                case "$releasever" in
-                16.0) file=Leap-$releasever-Minimal-VM.$basearch-Cloud.qcow2 ;;
-                # 16.0) file=Leap-$releasever-Minimal-VM.$basearch-kvm$(if [ "$basearch" = x86_64 ]; then echo '-and-xen'; fi).qcow2 ;;
-                esac
+                file=Leap-$releasever-Minimal-VM.$basearch-Cloud.qcow2
+                # file=Leap-$releasever-Minimal-VM.$basearch-kvm$(if [ "$basearch" = x86_64 ]; then echo '-and-xen'; fi).qcow2
 
                 # kvm 镜像里面没有 cloud-init
                 # 但不够 Cloud 镜像通用?
@@ -1997,12 +2086,7 @@ Continue with DD?
                         img=$ci_mirror/$releasever/images/CentOS-$releasever-$elarch-GenericCloud$ver.qcow2c
                         ;;
                     *)
-                        # 有 bios 和 efi 镜像
-                        # https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-10-latest.x86_64.qcow2
-                        # https://cloud.centos.org/centos/10-stream/x86_64/images/CentOS-Stream-GenericCloud-x86_64-10-latest.x86_64.qcow2
-                        [ "$elarch" = x86_64 ] &&
-                            img=$ci_mirror/$releasever-stream/$elarch/images/CentOS-Stream-GenericCloud-x86_64-$releasever-latest.$elarch.qcow2 ||
-                            img=$ci_mirror/$releasever-stream/$elarch/images/CentOS-Stream-GenericCloud-$releasever-latest.$elarch.qcow2
+                        img=$ci_mirror/$releasever-stream/$elarch/images/CentOS-Stream-GenericCloud-$releasever-latest.$elarch.qcow2
                         ;;
                     esac
                     ;;
@@ -2218,13 +2302,13 @@ verify_os_name() {
         'oracle      8|9|10' \
         'fnos        1' \
         'fygoos      1' \
-        'fedora      43|44' \
+        'fedora      44|45' \
         'nixos       26.05' \
         'debian      9|10|11|12|13' \
-        'opensuse    16.0|tumbleweed' \
+        'opensuse    16.0|16.1|tumbleweed' \
         'alpine      3.21|3.22|3.23|3.24' \
-        'openeuler   20.03|22.03|24.03' \
-        'ubuntu      18.04|20.04|22.04|24.04|26.04' \
+        'openeuler   20.03|22.03|24.03|26.09' \
+        'ubuntu      18.04|20.04|22.04|24.04|26.04|26.10' \
         'kali        last-snapshot|rolling' \
         'redhat' \
         'arch' \
@@ -2535,16 +2619,19 @@ check_ram() {
     if is_in_windows; then
         ram_size=$(wmic memorychip get capacity | awk -F= '{sum+=$2} END {if(sum>0) print sum/1024/1024}')
     else
-        # lsmem最准确但 centos7 arm 和 alpine 不能用，debian 9 util-linux 没有 lsmem
+        # lsmem 最准确但 centos7 arm 和 archlinux arm 不能用，debian 9 util-linux 没有 lsmem
         # arm 24g dmidecode 显示少了128m
-        # arm 24g lshw 显示23BiB
+        # arm 24g lshw 显示 23GiB?
         # ec2 t4g arm alpine 用 lsmem 和 dmidecode 都无效，要用 lshw，但结果和free -m一致，其他平台则没问题
         install_pkg lsmem
         ram_size=$(lsmem -b 2>/dev/null | grep 'Total online memory:' | awk '{ print $NF/1024/1024 }')
 
         if ! is_valid_ram_size "$ram_size"; then
             install_pkg dmidecode
-            ram_size=$(dmidecode -t 17 | grep "Size.*[GM]B" | awk '{if ($3=="GB") s+=$2*1024; else s+=$2} END {if(s>0) print s}')
+            # centos 7 是 GB
+            # alpine 是 GiB
+            ram_size=$(dmidecode -t memory | grep -E "Size.*[GB|GiB|MiB|MB]" |
+                awk '{if ($3=="GB" || $3=="GiB") s+=$2*1024; else s+=$2} END {if(s>0) print s}')
         fi
 
         if ! is_valid_ram_size "$ram_size"; then
@@ -2710,6 +2797,7 @@ is_administrator_username() {
 }
 
 prompt_username() {
+    echo >&2
     info "prompt username"
 
     if [ "$distro" = windows ]; then
@@ -2718,8 +2806,9 @@ prompt_username() {
         default_username=root
     fi
 
-    warn false "Set username, leave blank to use $default_username"
     warn false "设置用户名，不填写则使用 $default_username"
+    warn false "Set username, leave blank will use $default_username"
+
     IFS= read -r -p "Username: " username
     username="$(printf "%s" "$username" | trim)"
 
@@ -2730,9 +2819,12 @@ prompt_username() {
 }
 
 prompt_password() {
+    echo >&2
     info "prompt password"
-    warn false "Set password, leave blank to use a random password."
+
     warn false "设置密码，不填写则使用随机密码"
+    warn false "Set password, leave blank will use a random password"
+
     while true; do
         IFS= read -r -p "Password: " password
         if [ -n "$password" ]; then
@@ -3543,7 +3635,8 @@ build_extra_cmdline() {
     # 会将 extra.xxx=yyy 写入新系统的 /etc/modprobe.d/local.conf
     # https://answers.launchpad.net/ubuntu/+question/249456
     # https://salsa.debian.org/installer-team/rootskel/-/blob/master/src/lib/debian-installer-startup.d/S02module-params?ref_type=heads
-    for key in confhome hold force_boot_mode force_cn force_old_windows_setup cloud_image no_cloud_kernel no_auto_drivers main_disk \
+    for key in confhome hold force_boot_mode force_cn cloud_image no_cloud_kernel main_disk \
+        force_old_windows_setup no_auto_drivers no_lockout_threshold \
         elts deb_mirror \
         username ssh_port rdp_port web_port web_path allow_ping; do
         value=${!key}
@@ -4369,6 +4462,11 @@ EOF
 done < <(cat "\$ROOT"/sys/class/tty/"\$1"/active | xargs -n 1)
 EOF
     fi
+
+    # 无法进入 alpine 时显示网络配置
+    insert_into_file init after 'Launching initramfs emergency recovery shell' -F <<EOF
+(cd /dev/netconf && grep -r . . >&2 || true)
+EOF
 }
 
 mod_initrd() {
@@ -4873,10 +4971,12 @@ fi
 # 整理参数
 long_opts=
 for o in ci installer debug minimal no-cloud-kernel no-auto-drivers allow-ping force-cn help \
+    no-lockout no-lockout-threshold \
     add-driver: \
     hold: sleep: \
     iso: \
     image-name: \
+    bit: \
     boot-wim: \
     img: \
     cloud-data: \
@@ -4974,6 +5074,10 @@ while true; do
         ;;
     --no-auto-drivers)
         no_auto_drivers=1
+        shift
+        ;;
+    --no-lockout | --no-lockout-threshold)
+        no_lockout_threshold=1
         shift
         ;;
     --allow-ping)
@@ -5199,6 +5303,13 @@ EOF
         lang=$(echo "$2" | to_lower)
         shift 2
         ;;
+    --bit)
+        if ! { [ "$2" = 32 ] || [ "$2" = 64 ]; }; then
+            error_and_exit "Invalid $1 value: $2"
+        fi
+        bit=$2
+        shift 2
+        ;;
     --)
         shift
         break
@@ -5213,17 +5324,34 @@ done
 # 检查必须的参数
 verify_os_args
 
-# 用户名
-if ! is_netboot_xyz && [ -z "$username" ]; then
-    prompt_username
-fi
-
-# 密码
-if ! is_netboot_xyz && [ -z "$ssh_keys" ] && [ -z "$password" ]; then
-    if is_use_dd; then
-        show_dd_password_tips
+# 用户名密码
+if ! is_netboot_xyz; then
+    need_prompt_username=false
+    need_prompt_password=false
+    if [ -z "$username" ]; then
+        need_prompt_username=true
     fi
-    prompt_password
+    if [ -z "$password" ] && [ -z "$ssh_keys" ]; then
+        need_prompt_password=true
+    fi
+
+    # 提示
+    if $need_prompt_username || $need_prompt_password; then
+        case "$distro" in
+        dd) show_dd_tips ;;
+        fnos) show_fnos_tips ;;
+        esac
+    fi
+
+    # 用户名
+    if $need_prompt_username; then
+        prompt_username
+    fi
+
+    # 密码
+    if $need_prompt_password; then
+        prompt_password
+    fi
 fi
 
 # 强制忽略/强制添加 --ci 参数
@@ -5518,65 +5646,48 @@ elif [ "$distro" = alpine ] && [ "$hold" = 1 ]; then
     echo "SSH Port: $ssh_port"
 
 elif [ "$distro" = fnos ]; then
-    info "While Install (View Logs)"
-    echo "Username: $username"
+    echo "Username: $username (During installation only)"
     if [ -n "$ssh_keys" ]; then
-        echo "Public Key: $ssh_keys"
+        echo "Public Key: $ssh_keys (During installation only)"
     else
-        echo "Password: $password"
+        echo "Password: $password (During installation only)"
     fi
-    echo "SSH Port: $ssh_port"
-    echo "WEB: $(get_http_log_url)"
+    echo "SSH Port: $ssh_port (During installation only)"
+    echo "WEB: $(get_http_log_url) (During installation only)"
 
-    info "After Install"
-
-    echo "安装后不会开启 SSH 服务。"
-    echo "你需要尽快到 http://IP:5666 配置账号密码。"
     echo
-    echo "SSH Service is disabled after installation."
-    echo "You need to config the username and password on http://IP:5666 as soon as possible."
+    show_fnos_tips
 
 elif [ "$distro" = windows ]; then
-    info "While Install (View Logs)"
-    echo "Username: $username"
-    echo "Password: $password"
-    echo "SSH Port: $ssh_port"
-    echo "WEB: $(get_http_log_url)"
-
-    info "After Install"
     if is_administrator_username "$username"; then
-        echo "Username: $username (Depends on Windows iso's language)"
+        echo "Username: $username (Might vary on Windows, depends on system language)"
     else
         echo "Username: $username"
     fi
     echo "Password: $password"
     echo "RDP Port: $rdp_port"
+    echo "SSH Port: $ssh_port (During installation only)"
+    echo "WEB: $(get_http_log_url) (During installation only)"
 
 elif [ "$distro" = dd ]; then
-    info "While Install (View Logs)"
-    echo "Username: $username"
+    echo "Username: $username (During installation only)"
     if [ -n "$ssh_keys" ]; then
-        echo "Public Key: $ssh_keys"
+        echo "Public Key: $ssh_keys (During installation only)"
     else
-        echo "Password: $password"
+        echo "Password: $password (During installation only)"
     fi
-    echo "SSH Port: $ssh_port"
-    echo "WEB: $(get_http_log_url)"
+    echo "SSH Port: $ssh_port (During installation only)"
+    echo "WEB: $(get_http_log_url) (During installation only)"
 
-    info "After Install"
     if [ -n "$cloud_data" ]; then
         echo "Cloud Data: $cloud_data"
         echo "Cloud Data Files: $cloud_data_files"
     else
-        echo "Username: [Depends on image]"
-        echo "Public Key: [Depends on image]"
-        echo "Password: [Depends on image]"
-        echo "SSH Port: [Depends on image]"
+        echo
+        show_dd_tips
     fi
-
 else
     # 普通 linux
-    info "While Install (View Logs)"
     echo "Username: $username"
     if [ -n "$ssh_keys" ]; then
         echo "Public Key: $ssh_keys"
@@ -5584,16 +5695,7 @@ else
         echo "Password: $password"
     fi
     echo "SSH Port: $ssh_port"
-    echo "WEB: $(get_http_log_url)"
-
-    info "After Install"
-    echo "Username: $username"
-    if [ -n "$ssh_keys" ]; then
-        echo "Public Key: $ssh_keys"
-    else
-        echo "Password: $password"
-    fi
-    echo "SSH Port: $ssh_port"
+    echo "WEB: $(get_http_log_url) (During installation only)"
 fi
 
 if is_in_windows; then
@@ -5604,27 +5706,41 @@ fi
 
 echo
 if [ "$distro" = netboot.xyz ]; then
-    echo '重启后进入 netboot.xyz。'
-    echo "或者现在运行 \"$reinstall_____ reset\" 以清除该引导项。"
-    echo
-    echo 'Reboot to start netboot.xyz.'
-    echo "Or run \"$reinstall_____ reset\" now to clear this boot entry."
-    echo
+    warn false '********** 警告 Warning **********'
+    warn false '重启后会进入 netboot.xyz。'
+    warn false "如果要取消进入，请在重启前运行 \"$reinstall_____ reset\"。"
+    warn false
+    warn false 'Reboot will start netboot.xyz.'
+    warn false "If you want to cancel entering, run \"$reinstall_____ reset\" before reboot."
+    warn false '**********************************'
 
 elif [ "$distro" = alpine ] && [ "$hold" = 1 ]; then
-    echo '重启后进入 Alpine Live OS。'
-    echo "或者现在运行 \"$reinstall_____ reset\" 以清除该引导项。"
-    echo
-    echo 'Reboot to start Alpine Live OS.'
-    echo "Or run \"$reinstall_____ reset\" now to clear this boot entry."
-    echo
+    warn false '********** 警告 Warning **********'
+    warn false '重启后会进入 Alpine Live OS。'
+    warn false "如果要取消进入，请在重启前运行 \"$reinstall_____ reset\"。"
+    warn false
+    warn false 'Reboot will start Alpine Live OS.'
+    warn false "If you want to cancel entering, run \"$reinstall_____ reset\" before reboot."
+    warn false '**********************************'
+
+elif [ "$hold" = 1 ]; then
+    warn false '********** 警告 Warning **********'
+    warn false '重启后会进入安装环境，不会自动重装。'
+    warn false "如果要取消进入，请在重启前运行 \"$reinstall_____ reset\"。"
+    warn false
+    warn false 'Reboot will start the installation environment, will not automatically reinstall.'
+    warn false "If you want to cancel entering, run \"$reinstall_____ reset\" before reboot."
+    warn false '**********************************'
+
 else
-    warn false '警告：重装会清除主硬盘的所有数据，包括所有分区！'
-    echo '重启后开始重装。'
-    echo "或者现在运行 \"$reinstall_____ reset\" 以取消重装。"
-    echo
-    warn false 'Warning: Reinstalling will erase all data on the main disk, including all partitions!'
-    echo 'Reboot to start the reinstallation.'
-    echo "Or run \"$reinstall_____ reset\" now to cancel the reinstallation."
+    warn false '********** 警告 Warning **********'
+    warn false '重启后会自动开始重装。'
+    warn false '这将清除主硬盘的所有数据，包括所有分区！！！'
+    warn false "如果要取消重装，请在重启前运行 \"$reinstall_____ reset\"。"
+    warn false
+    warn false 'Reboot will start the automatic reinstallation.'
+    warn false 'THIS WILL ERASE ALL DATA ON THE MAIN DISK, INCLUDING ALL PARTITIONS!!!'
+    warn false "If you want to cancel the reinstallation, run \"$reinstall_____ reset\" before reboot."
+    warn false '**********************************'
 fi
 echo

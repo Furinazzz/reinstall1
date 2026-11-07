@@ -29,7 +29,7 @@
 
 ### 反馈
 
-[![GitHub Issues](https://img.shields.io/badge/GitHub-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/bin456789/reinstall/issues)
+[![GitHub Issues](https://img.shields.io/badge/GitHub-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Furinazzz/reinstall1/issues)
 [![Telegram Group](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/reinstall_os)
 
 ## 快速开始
@@ -53,14 +53,14 @@
 | <img width="16" height="16" src="https://www.alpinelinux.org/alpine-logo.ico" /> Alpine                                                                                                                                                                                                                                                                                | 3.21, 3.22, 3.23, 3.24                | 256 MB    | 1 GB         |
 | <img width="16" height="16" src="https://www.debian.org/favicon.ico" /> Debian                                                                                                                                                                                                                                                                                         | 9 ELTS - 11 ELTS, 12, 13              | 256 MB    | 1 ~ 1.5 GB ^ |
 | <img width="16" height="16" src="https://github.com/bin456789/reinstall/assets/7548515/f74b3d5b-085f-4df3-bcc9-8a9bd80bb16d" /> Kali                                                                                                                                                                                                                                   | Last-Snapshot, Rolling (滚动)         | 256 MB    | 1 ~ 1.5 GB ^ |
-| <img width="16" height="16" src="https://documentation.ubuntu.com/server/_static/favicon.png" /> Ubuntu                                                                                                                                                                                                                                                                | 18.04 LTS - 26.04 LTS                 | 512 MB \* | 2 GB         |
+| <img width="16" height="16" src="https://documentation.ubuntu.com/server/_static/favicon.png" /> Ubuntu                                                                                                                                                                                                                                                                | 18.04 LTS - 26.04 LTS, 26.10          | 512 MB \* | 2 GB         |
 | <img width="16" height="16" src="https://img.alicdn.com/imgextra/i1/O1CN01oJnJZg1yK4RzI4Rx2_!!6000000006559-2-tps-118-118.png" /> Anolis                                                                                                                                                                                                                               | 7, 8, 23                              | 512 MB \* | 5 GB         |
 | <img width="16" height="16" src="https://www.redhat.com/favicon.ico" /> RHEL &nbsp;<img width="16" height="16" src="https://almalinux.org/fav/favicon.ico" /> AlmaLinux &nbsp;<img width="16" height="16" src="https://rockylinux.org/favicon.png" /> Rocky &nbsp;<img width="16" height="16" src="https://www.oracle.com/asset/web/favicons/favicon-32.png" /> Oracle | 8, 9, 10                              | 512 MB \* | 5 GB         |
 | <img width="16" height="16" src="https://opencloudos.org/qq.ico" /> OpenCloudOS                                                                                                                                                                                                                                                                                        | 8, 9, Stream 23                       | 512 MB \* | 5 GB         |
 | <img width="16" height="16" src="https://www.centos.org/assets/icons/favicon.svg" /> CentOS Stream                                                                                                                                                                                                                                                                     | 9, 10                                 | 512 MB \* | 5 GB         |
-| <img width="16" height="16" src="https://fedoraproject.org/favicon.ico" /> Fedora                                                                                                                                                                                                                                                                                      | 43, 44                                | 512 MB \* | 5 GB         |
-| <img width="16" height="16" src="https://www.openeuler.org/favicon.ico" /> openEuler                                                                                                                                                                                                                                                                                   | 20.03 LTS - 24.03 LTS                 | 512 MB \* | 5 GB         |
-| <img width="16" height="16" src="https://static.opensuse.org/favicon.ico" /> openSUSE                                                                                                                                                                                                                                                                                  | Leap 16.0, Tumbleweed (滚动)          | 512 MB \* | 5 GB         |
+| <img width="16" height="16" src="https://fedoraproject.org/favicon.ico" /> Fedora                                                                                                                                                                                                                                                                                      | 44, 45                                | 512 MB \* | 5 GB         |
+| <img width="16" height="16" src="https://www.openeuler.org/favicon.ico" /> openEuler                                                                                                                                                                                                                                                                                   | 20.03 LTS - 24.03 LTS, 26.09          | 512 MB \* | 5 GB         |
+| <img width="16" height="16" src="https://static.opensuse.org/favicon.ico" /> openSUSE                                                                                                                                                                                                                                                                                  | Leap 16.0, 16.1; Tumbleweed (滚动)    | 512 MB \* | 5 GB         |
 | <img width="16" height="16" src="https://nixos.org/favicon.svg" /> NixOS                                                                                                                                                                                                                                                                                               | 26.05                                 | 512 MB    | 5 GB         |
 | <img width="16" height="16" src="https://archlinux.org/static/favicon.png" /> Arch Linux / Arch Linux ARM                                                                                                                                                                                                                                                              | 滚动                                  | 512 MB    | 5 GB         |
 | <img width="16" height="16" src="https://www.gentoo.org/assets/img/logo/gentoo-g.png" /> Gentoo                                                                                                                                                                                                                                                                        | 滚动                                  | 512 MB    | 5 GB         |
@@ -91,13 +91,13 @@
 国外服务器：
 
 ```bash
-curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 国内服务器：
 
 ```bash
-curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 ## 下载（当前系统是 <img width="20" height="20" src="https://blogs.windows.com/wp-content/uploads/prod/2022/09/cropped-Windows11IconTransparent512-32x32.png" /> Windows）
@@ -113,7 +113,7 @@ curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget
 
 用 IE 下载 (先在 IE 高级设置里启用 TLS 1.2)，或者通过远程桌面，将这两个文件保存到同一个目录
 
-- <https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat>
+- <https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.bat>
 
 - <https://www.cygwin.com/setup-x86.exe>
 
@@ -124,13 +124,13 @@ curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget
 国外服务器：
 
 ```batch
-certutil -urlcache -f -split https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat
+certutil -urlcache -f -split https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.bat
 ```
 
 国内服务器：
 
 ```batch
-certutil -urlcache -f -split https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.bat
+certutil -urlcache -f -split https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.bat
 ```
 
 ## 使用
@@ -168,13 +168,13 @@ bash reinstall.sh anolis      7|8|23
                   fnos        1
                   fygoos      1
                   nixos       26.05
-                  fedora      43|44
+                  fedora      44|45
                   debian      9|10|11|12|13
-                  opensuse    16.0|tumbleweed
-                  openeuler   20.03|22.03|24.03
                   alpine      3.21|3.22|3.23|3.24
+                  opensuse    16.0|16.1|tumbleweed
                   kali        last-snapshot|rolling
-                  ubuntu      18.04|20.04|22.04|24.04|26.04 [--minimal]
+                  openeuler   20.03|22.03|24.03|26.09
+                  ubuntu      18.04|20.04|22.04|24.04|26.04|26.10 [--minimal]
                   arch
                   gentoo
                   aosc
@@ -262,6 +262,7 @@ bash reinstall.sh dd --img "https://example.com/xxx.xz"
 - `--rdp-port PORT` 修改 RDP 端口（仅限 DD Windows）
 - `--web-port PORT` 修改 Web 端口（安装期间观察日志用）
 - `--allow-ping` 设置 Windows 防火墙允许被 Ping（仅限 DD Windows）
+- `--no-lockout-threshold` 禁止多次登录失败时锁定帐户（仅限 DD Windows）
 - `--frpc-config PATH` 添加 frpc 内网穿透（仅限 DD Windows），参数填配置文件的本地路径或 HTTP 链接
 - `--cloud-data PATH_OR_URL` 为 DD Linux 镜像注入 cloud-init NoCloud 配置（仅限 DD Linux）
 - `--hold 1` 仅重启到安装环境，不运行安装，用于 SSH 登录验证网络连通性
@@ -361,6 +362,7 @@ bash reinstall.sh netboot.xyz
 #### 方法 1: 让脚本自动查找 ISO
 
 - 脚本会从 <https://ntriver.org/download-windows-office> 查找 ISO，该网站专门收集官方 ISO 镜像
+- 默认查找 64 位系统镜像，除非指定了 `--bit 32`
 
 ```bash
 bash reinstall.sh windows \
@@ -578,6 +580,7 @@ bash reinstall.sh windows \
 - `--ssh-port PORT` 修改 SSH 端口（安装期间观察日志用）
 - `--web-port PORT` 修改 Web 端口（安装期间观察日志用）
 - `--allow-ping` 设置 Windows 防火墙允许被 Ping
+- `--no-lockout-threshold` 禁止多次登录失败时锁定帐户
 - `--add-driver INF_OR_DIR` 添加额外驱动，填写 .inf 路径，或者 .inf 所在的文件夹
   - 需先下载驱动到当前系统
   - 可多次设置该参数以添加不同的驱动
@@ -707,13 +710,13 @@ bash reinstall.sh reset
 
 如果脚本出现问题，可以试下旧版本是否正常
 
-从 <https://github.com/bin456789/reinstall/commits/main> 右侧找到旧版本的 `commit_id`
+从 <https://github.com/Furinazzz/reinstall1/commits/main> 右侧找到旧版本的 `commit_id`
 
 将下面脚本的 `xxxxxxxx` 替换成旧版本的 `commit_id` 并运行脚本
 
 ```bash
 commit_id=xxxxxxxx
-curl -O https://raw.githubusercontent.com/bin456789/reinstall/$commit_id/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/Furinazzz/reinstall1/$commit_id/reinstall.sh || wget -O ${_##*/} $_
 sed -i "/^confhome.*main$/s/main/$commit_id/" reinstall.sh
 bash reinstall.sh ...
 ```

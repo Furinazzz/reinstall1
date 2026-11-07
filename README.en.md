@@ -29,7 +29,7 @@ Buy me a milk tea:
 
 ### Feedback
 
-[![GitHub Issues](https://img.shields.io/badge/GitHub-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/bin456789/reinstall/issues)
+[![GitHub Issues](https://img.shields.io/badge/GitHub-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Furinazzz/reinstall1/issues)
 [![Telegram Group](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/reinstall_os)
 
 ## Quick Start
@@ -53,14 +53,14 @@ The system requirements for the target system are as follows:
 | <img width="16" height="16" src="https://www.alpinelinux.org/alpine-logo.ico" /> Alpine                                                                                                                                                                                                                                                                                | 3.21, 3.22, 3.23, 3.24                | 256 MB    | 1 GB             |
 | <img width="16" height="16" src="https://www.debian.org/favicon.ico" /> Debian                                                                                                                                                                                                                                                                                         | 9 ELTS - 11 ELTS, 12, 13              | 256 MB    | 1 ~ 1.5 GB ^     |
 | <img width="16" height="16" src="https://github.com/bin456789/reinstall/assets/7548515/f74b3d5b-085f-4df3-bcc9-8a9bd80bb16d" /> Kali                                                                                                                                                                                                                                   | Last-Snapshot, Rolling                | 256 MB    | 1 ~ 1.5 GB ^     |
-| <img width="16" height="16" src="https://documentation.ubuntu.com/server/_static/favicon.png" /> Ubuntu                                                                                                                                                                                                                                                                | 18.04 LTS - 26.04 LTS                 | 512 MB \* | 2 GB             |
+| <img width="16" height="16" src="https://documentation.ubuntu.com/server/_static/favicon.png" /> Ubuntu                                                                                                                                                                                                                                                                | 18.04 LTS - 26.04 LTS, 26.10          | 512 MB \* | 2 GB             |
 | <img width="16" height="16" src="https://img.alicdn.com/imgextra/i1/O1CN01oJnJZg1yK4RzI4Rx2_!!6000000006559-2-tps-118-118.png" /> Anolis                                                                                                                                                                                                                               | 7, 8, 23                              | 512 MB \* | 5 GB             |
 | <img width="16" height="16" src="https://www.redhat.com/favicon.ico" /> RHEL &nbsp;<img width="16" height="16" src="https://almalinux.org/fav/favicon.ico" /> AlmaLinux &nbsp;<img width="16" height="16" src="https://rockylinux.org/favicon.png" /> Rocky &nbsp;<img width="16" height="16" src="https://www.oracle.com/asset/web/favicons/favicon-32.png" /> Oracle | 8, 9, 10                              | 512 MB \* | 5 GB             |
 | <img width="16" height="16" src="https://opencloudos.org/qq.ico" /> OpenCloudOS                                                                                                                                                                                                                                                                                        | 8, 9, Stream 23                       | 512 MB \* | 5 GB             |
 | <img width="16" height="16" src="https://www.centos.org/assets/icons/favicon.svg" /> CentOS Stream                                                                                                                                                                                                                                                                     | 9, 10                                 | 512 MB \* | 5 GB             |
-| <img width="16" height="16" src="https://fedoraproject.org/favicon.ico" /> Fedora                                                                                                                                                                                                                                                                                      | 43, 44                                | 512 MB \* | 5 GB             |
-| <img width="16" height="16" src="https://www.openeuler.org/favicon.ico" /> openEuler                                                                                                                                                                                                                                                                                   | 20.03 LTS - 24.03 LTS                 | 512 MB \* | 5 GB             |
-| <img width="16" height="16" src="https://static.opensuse.org/favicon.ico" /> openSUSE                                                                                                                                                                                                                                                                                  | Leap 16.0, Tumbleweed (Rolling)       | 512 MB \* | 5 GB             |
+| <img width="16" height="16" src="https://fedoraproject.org/favicon.ico" /> Fedora                                                                                                                                                                                                                                                                                      | 44, 45                                | 512 MB \* | 5 GB             |
+| <img width="16" height="16" src="https://www.openeuler.org/favicon.ico" /> openEuler                                                                                                                                                                                                                                                                                   | 20.03 LTS - 24.03 LTS, 26.09          | 512 MB \* | 5 GB             |
+| <img width="16" height="16" src="https://static.opensuse.org/favicon.ico" /> openSUSE                                                                                                                                                                                                                                                                                  | Leap 16.0, 16.1; Tumbleweed (Rolling) | 512 MB \* | 5 GB             |
 | <img width="16" height="16" src="https://nixos.org/favicon.svg" /> NixOS                                                                                                                                                                                                                                                                                               | 26.05                                 | 512 MB    | 5 GB             |
 | <img width="16" height="16" src="https://archlinux.org/static/favicon.png" /> Arch Linux / Arch Linux ARM                                                                                                                                                                                                                                                              | Rolling                               | 512 MB    | 5 GB             |
 | <img width="16" height="16" src="https://www.gentoo.org/assets/img/logo/gentoo-g.png" /> Gentoo                                                                                                                                                                                                                                                                        | Rolling                               | 512 MB    | 5 GB             |
@@ -91,13 +91,13 @@ The system requirements for the target system are as follows:
 For server outside China:
 
 ```bash
-curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 For server inside China:
 
 ```bash
-curl -O https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.sh || wget -O ${_##*/} $_
 ```
 
 ## Download (Current system is <img width="20" height="20" src="https://blogs.windows.com/wp-content/uploads/prod/2022/09/cropped-Windows11IconTransparent512-32x32.png" /> Windows)
@@ -113,7 +113,7 @@ Due to lack of support for TLS 1.2, SHA-256, or outdated root certificates, Wind
 
 Use Internet Explorer (enable TLS 1.2 in IE's advanced settings first) to download, or use Remote Desktop to save the following two files into the same directory:
 
-- <https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat>
+- <https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.bat>
 
 - <https://www.cygwin.com/setup-x86.exe>
 
@@ -124,13 +124,13 @@ To use, run the downloaded `reinstall.bat`.
 For server outside China:
 
 ```batch
-certutil -urlcache -f -split https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.bat
+certutil -urlcache -f -split https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.bat
 ```
 
 For server inside China:
 
 ```batch
-certutil -urlcache -f -split https://cnb.cool/bin456789/reinstall/-/git/raw/main/reinstall.bat
+certutil -urlcache -f -split https://raw.githubusercontent.com/Furinazzz/reinstall1/main/reinstall.bat
 ```
 
 ## Usage
@@ -168,13 +168,13 @@ bash reinstall.sh anolis      7|8|23
                   fnos        1
                   fygoos      1
                   nixos       26.05
-                  fedora      43|44
+                  fedora      44|45
                   debian      9|10|11|12|13
-                  opensuse    16.0|tumbleweed
-                  openeuler   20.03|22.03|24.03
                   alpine      3.21|3.22|3.23|3.24
+                  opensuse    16.0|16.1|tumbleweed
                   kali        last-snapshot|rolling
-                  ubuntu      18.04|20.04|22.04|24.04|26.04 [--minimal]
+                  openeuler   20.03|22.03|24.03|26.09
+                  ubuntu      18.04|20.04|22.04|24.04|26.04|26.10 [--minimal]
                   arch
                   gentoo
                   aosc
@@ -262,6 +262,7 @@ bash reinstall.sh dd --img "https://example.com/xxx.xz"
 - `--rdp-port PORT` Change RDP port (DD Windows only)
 - `--web-port PORT` Change Web port (for log observation during installation)
 - `--allow-ping` Configure Windows Firewall to Allow Ping Responses (DD Windows only)
+- `--no-lockout-threshold` Disable account lockout upon multiple failed login attempts (DD Windows only)
 - `--frpc-config PATH` Add frpc for intranet tunneling (DD Windows only). Parameter can be local filepath or HTTP URL of the configuration file.
 - `--cloud-data PATH_OR_URL` Inject cloud-init NoCloud configuration into the DD'd Linux image (DD Linux only)
 - `--hold 1` Reboot only into install environment, without running installer, only for SSH connect to test network connection.
@@ -361,6 +362,7 @@ bash reinstall.sh netboot.xyz
 #### Method 1: Let the Script Automatically Search for ISO
 
 - The script will search for ISOs from <https://ntriver.org/download-windows-office>, a site that collects official ISOs.
+- Searches for 64-bit system images by default, unless `--bit 32` is specified.
 
 ```bash
 bash reinstall.sh windows \
@@ -578,6 +580,7 @@ bash reinstall.sh windows \
 - `--ssh-port PORT` Change SSH port (for log observation during installation only)
 - `--web-port PORT` Change Web port (for log observation during installation only)
 - `--allow-ping` Configure Windows Firewall to Allow Ping Responses
+- `--no-lockout-threshold` Disable account lockout upon multiple failed login attempts
 - `--add-driver INF_OR_DIR` Add additional driver, specifying .inf path, or the folder contains .inf file.
   - The driver must be downloaded to current system first.
   - This parameter can be set multiple times to add different driver.
@@ -707,13 +710,13 @@ According to the Law of Bug Conservation, fixing old bugs often introduces new o
 
 If a bug occurs, try using an older version to see if it works.
 
-Go to <https://github.com/bin456789/reinstall/commits/main> and find the old version’s `commit_id` on the right side.
+Go to <https://github.com/Furinazzz/reinstall1/commits/main> and find the old version’s `commit_id` on the right side.
 
 Replace `xxxxxxxx` in the script below with the `commit_id` of an older version and run the script.
 
 ```bash
 commit_id=xxxxxxxx
-curl -O https://raw.githubusercontent.com/bin456789/reinstall/$commit_id/reinstall.sh || wget -O ${_##*/} $_
+curl -O https://raw.githubusercontent.com/Furinazzz/reinstall1/$commit_id/reinstall.sh || wget -O ${_##*/} $_
 sed -i "/^confhome.*main$/s/main/$commit_id/" reinstall.sh
 bash reinstall.sh ...
 ```
