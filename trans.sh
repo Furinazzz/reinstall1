@@ -3653,8 +3653,10 @@ get_image_state() {
     fi
 }
 
-is_windows10_iso() {
-    [ "$distro" = windows ] && [ "${product_ver:-}" = 10 ]
+is_windows_personalization_iso() {
+    [ "$distro" = windows ] && {
+        [ "${product_ver:-}" = 10 ] || [ "${product_ver:-}" = 11 ]
+    }
 }
 
 modify_windows() {
@@ -3702,11 +3704,14 @@ modify_windows() {
         bats="$bats windows-set-netconf-$ethx.bat"
     done
 
-    # Windows 10 ISO: override DNS only after upstream restores IP/gateway/DNS.
-    # Keep the standalone BAT for FirstLogonCommands and manual recovery.
-    if is_windows10_iso; then
+    # Windows 10/11 ISO: restore networking before DNS/DoH configuration. The full
+    # personalization runs at first logon, never during SetupComplete (no reboot).
+    if is_windows_personalization_iso; then
         download "$confhome/windows-cloudflare-japan.bat" "$os_dir/windows-cloudflare-japan.bat"
         unix2dos "$os_dir/windows-cloudflare-japan.bat"
+        for script in windows-personalize.ps1 windows-install-software.ps1 windows-remove-components.ps1; do
+            download "$confhome/$script" "$os_dir/$script"
+        done
         cat >"$os_dir/windows-cloudflare-japan-auto.bat" <<'EOF'
 @echo off
 call "%SystemDrive%\windows-cloudflare-japan.bat" --auto
@@ -8361,12 +8366,12 @@ EOF
     # 修改应答文件
     apk add xmlstarlet
     download $confhome/windows.xml /tmp/autounattend.xml
-    # These fork settings apply only to Windows 10 client ISO installs.
+    # These fork settings apply to Windows 10 and 11 client ISO installs.
     # Keep other Windows versions and DD images on their original behavior.
-    if ! is_windows10_iso; then
+    if ! is_windows_personalization_iso; then
         xmlstarlet ed -L -N x="urn:schemas-microsoft-com:unattend" \
             -d "//x:TimeZone[.='Tokyo Standard Time']" \
-            -d "//x:FirstLogonCommands[x:SynchronousCommand/x:Description='Reinstall: Cloudflare DNS and Japan']" \
+            -d "//x:FirstLogonCommands[x:SynchronousCommand/x:Description='Reinstall: Windows personalization']" \
             /tmp/autounattend.xml
     fi
     locale=$(get_selected_image_prop 'Default Language')

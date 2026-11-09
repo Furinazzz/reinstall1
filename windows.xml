@@ -174,16 +174,16 @@
                 <SkipMachineOOBE>true</SkipMachineOOBE>
                 <SkipUserOOBE>true</SkipUserOOBE>
             </OOBE>
-            <!-- trans.sh removes these fork settings for non-Windows-10 images. -->
+            <!-- trans.sh removes these fork settings outside Windows 10/11 ISO installs. -->
             <TimeZone>Tokyo Standard Time</TimeZone>
             <!-- GeoID is per-user. Run once in the installed admin user's context.
-                 Also recheck DNS after SetupComplete (or if OEM setup skipped it).
+                 Recheck DNS, then activate and install software after setup.
                  Keep all work in one command: FirstLogonCommands run concurrently. -->
             <FirstLogonCommands>
                 <SynchronousCommand wcm:action="add">
                     <Order>1</Order>
-                    <CommandLine>cmd /c call "%SystemDrive%\windows-cloudflare-japan.bat" --auto</CommandLine>
-                    <Description>Reinstall: Cloudflare DNS and Japan</Description>
+                    <CommandLine>powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%SystemDrive%\windows-personalize.ps1"</CommandLine>
+                    <Description>Reinstall: Windows personalization</Description>
                 </SynchronousCommand>
             </FirstLogonCommands>
         </component>

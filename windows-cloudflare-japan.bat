@@ -7,12 +7,13 @@ if /i "%~1"=="--auto" set "REINSTALL_AUTO=1"
 set "REINSTALL_SELF=%~f0"
 set "REINSTALL_POWERSHELL=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 if exist "%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe" set "REINSTALL_POWERSHELL=%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
-"%REINSTALL_POWERSHELL%" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$raw=[IO.File]::ReadAllText($env:REINSTALL_SELF); $marker='#==PS_PAYLOAD_START=='; $start=$raw.LastIndexOf($marker); if ($start -lt 0) { exit 1 }; & ([scriptblock]::Create($raw.Substring($start+$marker.Length)))"
+"%REINSTALL_POWERSHELL%" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $raw=[IO.File]::ReadAllText($env:REINSTALL_SELF,[Text.Encoding]::UTF8); $marker='#==PS_PAYLOAD_START=='; $start=$raw.LastIndexOf($marker); if ($start -lt 0) { exit 1 }; & ([scriptblock]::Create($raw.Substring($start+$marker.Length)))"
 set "REINSTALL_RESULT=%errorlevel%"
 if not "%REINSTALL_RESULT%"=="0" echo Configuration failed. See the error and log path above.
 if not defined REINSTALL_AUTO pause
 exit /b %REINSTALL_RESULT%
 #==PS_PAYLOAD_START==
+$ErrorActionPreference = 'Stop'
 # Windows PowerShell 5.1 payload. This file is intentionally ASCII / CRLF.
 # DNS overrides DHCP-provided DNS only. IP addresses, routes, DHCP, and adapter
 # bindings are left intact. No adapters are disabled, restarted, or enabled.
@@ -32,35 +33,86 @@ function ConvertTo-CanonicalDnsList {
     return @($Addresses | ForEach-Object { ([Net.IPAddress]::Parse($_)).ToString() })
 }
 
+function Test-ReinstallUsableAddress {
+    param($Address)
+    if ($Address.AddressState -notin @('Preferred', 'Deprecated')) { return $false }
+    $ip = [Net.IPAddress]::Parse($Address.IPAddress)
+    if ([Net.IPAddress]::IsLoopback($ip)) { return $false }
+    if ($Address.AddressFamily -eq 'IPv4') {
+        $bytes = $ip.GetAddressBytes()
+        return $bytes[0] -ne 0 -and $bytes[0] -lt 224 -and
+            -not ($bytes[0] -eq 169 -and $bytes[1] -eq 254)
+    }
+    return -not ($ip.Equals([Net.IPAddress]::IPv6Any) -or $ip.IsIPv6LinkLocal -or $ip.IsIPv6Multicast)
+}
+
+function Test-ReinstallDohSupport {
+    $commands = @('Get-DnsClientDohServerAddress', 'Set-DnsClientDohServerAddress', 'Add-DnsClientDohServerAddress')
+    return @(Get-Command -Name $commands -ErrorAction SilentlyContinue).Count -eq $commands.Count
+}
+
+function Set-ReinstallCloudflareDoh {
+    param([string[]] $Servers)
+    $template = 'https://cloudflare-dns.com/dns-query'
+    foreach ($server in $Servers) {
+        # Enumerating avoids a missing-object error for servers not yet registered.
+        $current = @(Get-DnsClientDohServerAddress -ErrorAction Stop | Where-Object {
+            ([Net.IPAddress]::Parse($_.ServerAddress)).ToString() -eq $server
+        })
+        if ($current.Count -gt 1) { throw "Multiple DoH entries exist for $server." }
+        if ($current.Count -eq 0) {
+            Add-DnsClientDohServerAddress -ServerAddress $server -DohTemplate $template -AutoUpgrade $true -AllowFallbackToUdp $false -ErrorAction Stop
+        }
+        elseif ($current[0].DohTemplate -ne $template -or -not $current[0].AutoUpgrade -or $current[0].AllowFallbackToUdp) {
+            Set-DnsClientDohServerAddress -ServerAddress $server -DohTemplate $template -AutoUpgrade $true -AllowFallbackToUdp $false -ErrorAction Stop
+        }
+        $verified = @(Get-DnsClientDohServerAddress -ErrorAction Stop | Where-Object {
+            ([Net.IPAddress]::Parse($_.ServerAddress)).ToString() -eq $server
+        })
+        if ($verified.Count -ne 1 -or $verified[0].DohTemplate -ne $template -or
+            -not $verified[0].AutoUpgrade -or $verified[0].AllowFallbackToUdp) {
+            throw "DoH policy verification failed for $server."
+        }
+    }
+}
+
 function Invoke-CloudflareDns {
+    [CmdletBinding()]
     param(
-        [ValidateRange(0, 300)][int] $TimeoutSeconds = 75,
-        [ValidateRange(0, 30)][int] $RetryDelaySeconds = 5
+        [ValidateRange(0, 300)][int] $TimeoutSeconds = 30,
+        [ValidateRange(0, 30)][int] $RetryDelaySeconds = 5,
+        [ValidateRange(1, 10)][int] $MaxAttempts = 3
     )
 
     $families = @(
         @{ Name = 'IPv4'; Binding = 'ms_tcpip'; Servers = @('1.1.1.1', '1.0.0.1') },
         @{ Name = 'IPv6'; Binding = 'ms_tcpip6'; Servers = @('2606:4700:4700::1111', '2606:4700:4700::1001') }
     )
-    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    $timer = [Diagnostics.Stopwatch]::StartNew()
     $originalDns = @{}
     $attempt = 0
+    $supportsDoh = Test-ReinstallDohSupport
+    if (-not $supportsDoh) {
+        Write-Warning 'Native DNS over HTTPS is unavailable on this Windows version (including stable Windows 10). Cloudflare DNS will be configured without encryption; a supported OS or a persistent DNS proxy is required for DoH.'
+    }
 
     do {
         $attempt++
         $failures = New-Object 'System.Collections.Generic.List[string]'
+        $configured = 0
         try {
-            # Include VM/synthetic and disconnected enabled adapters. Get-NetAdapter
-            # omits hidden adapters by default; IANA types 24/131 are loopback/tunnel.
+            # Include connected VM/synthetic interfaces, but leave disconnected,
+            # disabled, loopback and tunnel interfaces alone.
             $adapters = @(Get-NetAdapter -ErrorAction Stop | Where-Object {
-                $_.AdminStatus -eq 'Up' -and $_.InterfaceType -notin @(24, 131)
+                $_.AdminStatus -eq 'Up' -and $_.Status -eq 'Up' -and $_.InterfaceType -notin @(24, 131)
             })
             if ($adapters.Count -eq 0) {
-                throw 'No enabled, non-loopback, non-tunnel network adapters are available yet.'
+                throw 'No connected network adapters are available yet.'
             }
             # Enumerate once, then compare exact names: adapter aliases can contain
             # wildcard characters, so do not pass an alias as a wildcard selector.
             $bindings = @(Get-NetAdapterBinding -Name '*' -ComponentID ms_tcpip, ms_tcpip6 -ErrorAction Stop)
+            $addresses = @(Get-NetIPAddress -ErrorAction Stop)
             foreach ($adapter in $adapters) {
                 foreach ($family in $families) {
                     try {
@@ -68,8 +120,20 @@ function Invoke-CloudflareDns {
                             $_.Name -eq $adapter.Name -and $_.ComponentID -eq $family.Binding
                         })
                         if ($binding.Count -ne 1 -or -not $binding[0].Enabled) {
-                            throw "$($family.Name) is unavailable or its binding is disabled; it will not be enabled by this script."
+                            Write-Host "Skipped: '$($adapter.Name)' $($family.Name) binding is unavailable or disabled."
+                            continue
                         }
+                        $usable = @($addresses | Where-Object {
+                            $_.InterfaceIndex -eq $adapter.ifIndex -and $_.AddressFamily -eq $family.Name -and
+                                (Test-ReinstallUsableAddress $_)
+                        })
+                        if ($usable.Count -eq 0) {
+                            Write-Host "Skipped: '$($adapter.Name)' $($family.Name) has no usable address."
+                            continue
+                        }
+                        # Configure only address families that actually exist. An
+                        # IPv6 link-local address alone is not IPv6 connectivity.
+                        if ($supportsDoh) { Set-ReinstallCloudflareDoh -Servers $family.Servers }
                         $dns = @(Get-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -AddressFamily $family.Name -ErrorAction Stop)
                         if ($dns.Count -ne 1) {
                             throw "Expected one $($family.Name) DNS configuration, found $($dns.Count)."
@@ -97,11 +161,15 @@ function Invoke-CloudflareDns {
                             throw "DNS verification failed: expected $($expected -join ', '); received $($actual -join ', ')."
                         }
                         Write-Host "Verified: '$($adapter.Name)' $($family.Name): $($actual -join ', ')"
+                        $configured++
                     }
                     catch {
                         $failures.Add("'$($adapter.Name)' $($family.Name): $($_.Exception.Message)")
                     }
                 }
+            }
+            if ($configured -eq 0 -and $failures.Count -eq 0) {
+                $failures.Add('No usable IPv4 or IPv6 address is available yet.')
             }
         }
         catch {
@@ -109,15 +177,16 @@ function Invoke-CloudflareDns {
         }
 
         if ($failures.Count -eq 0) {
-            Write-Host "Cloudflare DNS configured and verified on $($adapters.Count) adapter(s)."
+            Write-Host "Cloudflare DNS configured and verified for $configured interface/address-family pair(s)."
+            if ($supportsDoh) { Write-Host 'Verified Cloudflare DoH policy: automatic HTTPS upgrade, no plaintext fallback.' }
             return
         }
         foreach ($failure in $failures) { Write-Host "Attempt $attempt : $failure" }
-        $remaining = ($deadline - [DateTime]::UtcNow).TotalSeconds
-        if ($remaining -le 0) { break }
+        $remaining = $TimeoutSeconds - $timer.Elapsed.TotalSeconds
+        if ($remaining -le 0 -or $attempt -ge $MaxAttempts) { break }
         Write-Host 'Waiting for network initialization before retrying...'
         Start-Sleep -Milliseconds ([int]([Math]::Min($RetryDelaySeconds, $remaining) * 1000))
-    } while ([DateTime]::UtcNow -lt $deadline)
+    } while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds -and $attempt -lt $MaxAttempts)
 
     throw "DNS configuration remains incomplete after $attempt attempt(s): $($failures -join '; ')"
 }
